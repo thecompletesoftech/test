@@ -8,7 +8,8 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Date;
-
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Response;
 class EventsController extends BaseController
 {
     public function getWarmupEvents() {
@@ -26,7 +27,7 @@ class EventsController extends BaseController
     - partial or not working answers also get graded so make sure you commit what you have
 
     Sample response on GET /events:
-    ```json
+    json
     [
         {
             "id": 1,
@@ -101,7 +102,27 @@ class EventsController extends BaseController
      */
 
     public function getEventsWithWorkshops() {
-        throw new \Exception('implement in coding task 1');
+        
+      $events=DB::table('events')->get();
+      $event_array=array();
+      foreach($events as $event){
+            
+            $workshops=$events=DB::table('workshops')->where('event_id',$event->id)->get();
+            $work_arr=array();
+            foreach($workshops as $work){
+                
+            array_push($work_arr,$work);
+            
+            }
+            // array_push($event_array,$event);
+            $event->workshops=$work_arr;
+            
+            
+
+            array_push($event_array,$event);
+      }
+      return response()->json($event_array);
+        // throw new \Exception('implement in coding task 1');
     }
 
 
@@ -180,6 +201,32 @@ class EventsController extends BaseController
      */
 
     public function getFutureEventsWithWorkshops() {
-        throw new \Exception('implement in coding task 2');
+        
+      $events=DB::table('events')->select("events.*")
+      ->join('workshops','events.id','=','workshops.event_id')
+      ->where('workshops.end','>', date("Y-m-d h:i:s", time()))
+      ->get();
+      $event_array=array();
+      foreach($events as $event){
+            
+            $workshops=$events=DB::table('workshops')->where('event_id',$event->id)->where('end','>', date("Y-m-d h:i:s", time()))->get();
+            $work_arr=array();
+            foreach($workshops as $work){
+                
+            
+            if($work!=null){
+                
+                $event->workshops=$work;
+            
+            }
+            }
+            // array_push($event_array,$event);
+            
+            
+            
+
+            array_push($event_array,$event);
+      }
+      return response()->json($event_array);
     }
 }
